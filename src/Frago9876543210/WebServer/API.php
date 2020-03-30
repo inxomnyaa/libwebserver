@@ -10,26 +10,6 @@ use raklib\utils\InternetAddress;
 
 class API
 {
-    public function onEnable(): void
-    {
-        try {
-            $server = new WebServer(new InternetAddress("0.0.0.0", 8080, 4),
-                function (Connection $connection, string $buffer) {
-                    echo $buffer . PHP_EOL;
-                    $connection->send("text/html", "<h1>PHP WebServer</h1>");
-                    $connection->close();
-                }
-            );
-            $server->start();
-        } catch (Exception $e) {
-            $this->getLogger()->critical($e->getMessage());
-        } finally {
-            if (isset($server)) {
-                $this->getLogger()->notice("The WebServer was successfully started on " . $server->getBindAddress()->toString());
-            }
-        }
-    }
-
     public static function startWebServer(Plugin $plugin, callable $handler, int $port = 8080): ?WebServer
     {
         try {
@@ -44,5 +24,40 @@ class API
             }
         }
         return null;
+    }
+
+    public static function getTextResponseHandler(string $content = "<h1>PHP WebServer</h1>"): callable
+    {
+        return static function (WSConnection $connection, WSRequest $request) use ($content): void {
+            echo print_r($request, true) . PHP_EOL;
+            $connection->send("text/html", $content);
+            $connection->close();
+        };
+    }
+
+    public static function getPathHandler(string $serverRoot): callable
+    {
+        return static function (WSConnection $connection, WSRequest $request) use ($serverRoot): void {
+            echo print_r($request, true) . PHP_EOL;
+            $requestedFile = $request->getUri();
+            $fullPath = realpath($serverRoot . $requestedFile);
+            if ($fullPath === false || !is_file($fullPath))
+                $fullPath = realpath($serverRoot . $requestedFile . DIRECTORY_SEPARATOR . "index.php");
+            if ($fullPath === false || !is_file($fullPath))
+                $fullPath = realpath($serverRoot . $requestedFile . DIRECTORY_SEPARATOR . "index.html");
+            if ($fullPath === false) {
+                $response = WSResponse::error(404);
+            } else {
+                $getContents = @file_get_contents($fullPath);
+                if ($getContents === false) {
+                    $response = WSResponse::error(403);
+                } else {
+                    $response = new WSResponse($getContents);//TODO detect mime type
+                }
+            }
+            var_dump($fullPath);
+            $connection->send($response);
+            $connection->close();
+        };
     }
 }

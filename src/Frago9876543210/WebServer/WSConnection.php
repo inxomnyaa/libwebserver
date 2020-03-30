@@ -7,13 +7,13 @@ namespace Frago9876543210\WebServer;
 use InvalidArgumentException;
 use raklib\utils\InternetAddress;
 
-class Connection
+class WSConnection
 {
     /** @var resource $socket */
     protected $socket;
 
     /**
-     * Connection constructor.
+     * WSConnection constructor.
      * @param resource $socket
      */
     public function __construct($socket)
@@ -46,12 +46,11 @@ class Connection
     }
 
     /**
-     * @param string $type
-     * @param string $data
+     * @param WSResponse $response
      */
-    public function send(string $type, string $data)
+    public function send(WSResponse $response): void
     {
-        $this->write("HTTP/1.1 200 OK\r\nContent-Type: " . $type . "\r\n\r\n" . $data);
+        $this->write($response->getResponse());
     }
 
     /**

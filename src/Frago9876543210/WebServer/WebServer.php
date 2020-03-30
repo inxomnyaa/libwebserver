@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace Frago9876543210\WebServer;
 
+use ClassLoader;
 use Exception;
+use pocketmine\plugin\PluginException;
+use pocketmine\Server;
 use pocketmine\Thread;
+use pocketmine\utils\Utils;
 use raklib\utils\InternetAddress;
 
 class WebServer extends Thread
@@ -30,11 +34,17 @@ class WebServer extends Thread
         $this->bindAddress = $bindAddress;
         $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         if (@!socket_bind($this->socket, $bindAddress->getIp(), $bindAddress->getPort())) {
-            throw new Exception("Failed to bind to $bindAddress");
+            throw new PluginException("Failed to bind to $bindAddress");
         }
         socket_set_option($this->socket, SOL_SOCKET, SO_REUSEADDR, 1);
         socket_listen($this->socket);
+        Utils::validateCallableSignature(static function (WSConnection $connection, WSRequest $request): void {
+        }, $handler);
         $this->handler = $handler;
+        /** @noinspection NullPointerExceptionInspection */
+        /** @var ClassLoader $cl */
+        $cl = Server::getInstance()->getPluginManager()->getPlugin("DEVirion")->getVirionClassLoader();
+        $this->setClassLoader($cl);
     }
 
     public function run(): void
@@ -43,8 +53,8 @@ class WebServer extends Thread
 
         while ($this->isRunning) {
             if (is_resource(($client = socket_accept($this->socket)))) {
-                $connection = new Connection($client);
-                call_user_func($this->handler, $connection, $connection->read());
+                $connection = new WSConnection($client);
+                call_user_func($this->handler, $connection, WSRequest::fromHeaderString($connection->read()));
             }
         }
     }
@@ -63,5 +73,13 @@ class WebServer extends Thread
     public function shutdown(): void
     {
         $this->isRunning = false;
+    }
+
+    /**
+     * @return callable
+     */
+    public function getHandler(): callable
+    {
+        return $this->handler;
     }
 }

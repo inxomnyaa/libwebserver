@@ -2,7 +2,7 @@
 branches:
   - master
 projects:
-  libwebserver:
+  WebServer:
     path: ""
     model: virion
     type: library
