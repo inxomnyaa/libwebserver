@@ -44,7 +44,8 @@ class WebServer extends Thread
         /** @noinspection NullPointerExceptionInspection */
         /** @var ClassLoader $cl */
         $cl = Server::getInstance()->getPluginManager()->getPlugin("DEVirion")->getVirionClassLoader();
-        $this->setClassLoader($cl);
+        $classLoader = new ServerFileAutoLoader($cl);
+        $this->setClassLoader($classLoader);
     }
 
     public function run(): void
@@ -54,7 +55,15 @@ class WebServer extends Thread
         while ($this->isRunning) {
             if (is_resource(($client = socket_accept($this->socket)))) {
                 $connection = new WSConnection($client);
-                call_user_func($this->handler, $connection, WSRequest::fromHeaderString($connection->read()));
+                try {
+                    call_user_func($this->handler, $connection, WSRequest::fromHeaderString($connection->read()));
+                } catch (SocketException $e) {
+                    print $e->getMessage();
+                    #print $e->getTraceAsString();
+                } finally {
+                    $connection->close();
+                    unset($connection);
+                }
             }
         }
     }

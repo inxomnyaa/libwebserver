@@ -1,5 +1,5 @@
 name: WebServer
-version: 0.1.0
+version: 0.1.1
 antigen: Frago9876543210\WebServer
 api: [3.11]
 php: [7.2]

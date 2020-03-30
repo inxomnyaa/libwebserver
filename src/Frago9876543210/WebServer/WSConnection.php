@@ -26,7 +26,13 @@ class WSConnection
      */
     public function read(): string
     {
-        return socket_read($this->socket, 1024);
+        $read = socket_read($this->socket, 1024);
+        if ($read === false) {
+            print socket_strerror(socket_last_error($this->socket));
+            $this->close();
+            return '';
+        }
+        return $read;
     }
 
     /**

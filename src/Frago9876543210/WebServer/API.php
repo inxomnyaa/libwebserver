@@ -51,22 +51,47 @@ class API
     public static function getPathHandler(string $serverRoot): callable
     {
         return static function (WSConnection $connection, WSRequest $request) use ($serverRoot): void {
-            $requestedFile = $request->getUri();
-            $fullPath = realpath($serverRoot . $requestedFile);
-            if ($fullPath === false || !is_file($fullPath))
-                $fullPath = realpath($serverRoot . $requestedFile . DIRECTORY_SEPARATOR . "index.php");
-            if ($fullPath === false || !is_file($fullPath))
-                $fullPath = realpath($serverRoot . $requestedFile . DIRECTORY_SEPARATOR . "index.html");
+            //set root path
+            set_include_path($serverRoot);
+            $serverRoot = realpath($serverRoot);
+
+            $requestedFile = '.' . $request->getUri();
+            if (is_dir($serverRoot . $request->getUri())) {
+                //is dir, search for index files
+                $parentDir = $requestedFile;
+                chdir($serverRoot . $parentDir);
+                $fileList = glob("index.{php,html,htm}", GLOB_MARK | GLOB_BRACE | GLOB_NOSORT);
+            } else {
+                //is file, search for file
+                $parentDir = dirname($requestedFile);
+                chdir($serverRoot . $parentDir);
+                $fileList = glob(basename($requestedFile), GLOB_MARK | GLOB_NOSORT);
+            }
+
+            if (empty($fileList)) {
+                $fullPath = false;
+            } else {
+                $str = getcwd() . DIRECTORY_SEPARATOR . array_shift($fileList);
+                $fullPath = realpath($str);
+            }
             if ($fullPath === false) {
                 $response = WSResponse::error(404);
             } else {
                 if (!is_file($fullPath)) {
                     $response = WSResponse::error(403);
                 } else {
-                    ob_start(); // begin collecting output
-                    include $fullPath;
-                    $getContents = ob_get_clean();
-                    @ob_end_clean();
+                    try {
+                        ob_start();
+                        @include $fullPath;
+                        $getContents = ob_get_clean();
+                        ob_start(); // begin collecting output
+                    } catch (\Throwable $e) {
+                        print $e->getMessage();
+                        print $e->getTraceAsString();
+                        $getContents = $e->getMessage() . PHP_EOL . $e->getTraceAsString();
+                        #$connection->close();
+                        #return;
+                    }
                     $response = new WSResponse($getContents);//TODO detect mime type
                 }
             }

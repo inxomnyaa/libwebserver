@@ -26,9 +26,11 @@ class WSRequest implements StatusCodes
      * Create new request instance using a string header
      * @param string $header
      * @return self
+     * @throws SocketException
      */
     public static function fromHeaderString(string $header): self
     {
+        if ($header === '') throw new SocketException("No more bytes left or connection closed");
         $lines = explode("\n", $header);
         // method, uri, version
         $requestInfo = explode(' ', array_shift($lines));
