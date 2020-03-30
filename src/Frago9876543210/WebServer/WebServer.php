@@ -44,8 +44,9 @@ class WebServer extends Thread
         /** @noinspection NullPointerExceptionInspection */
         /** @var ClassLoader $cl */
         $cl = Server::getInstance()->getPluginManager()->getPlugin("DEVirion")->getVirionClassLoader();
-        $classLoader = new ServerFileAutoLoader($cl);
-        $this->setClassLoader($classLoader);
+        #$classLoader = new ServerFileAutoLoader($cl);
+        #$this->setClassLoader($classLoader);
+        $this->setClassLoader($cl);
     }
 
     public function run(): void

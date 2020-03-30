@@ -26,7 +26,7 @@ class WSConnection
      */
     public function read(): string
     {
-        $read = socket_read($this->socket, 1024);
+        $read = @socket_read($this->socket, 1024);
         if ($read === false) {
             print socket_strerror(socket_last_error($this->socket));
             $this->close();
@@ -40,7 +40,7 @@ class WSConnection
      */
     public function write(string $data): void
     {
-        socket_write($this->socket, $data);
+        @socket_write($this->socket, $data);
     }
 
     /**
@@ -48,7 +48,7 @@ class WSConnection
      */
     public function close(): void
     {
-        socket_close($this->socket);
+        @socket_close($this->socket);
     }
 
     /**
@@ -65,7 +65,7 @@ class WSConnection
     public function getAddress(): ?InternetAddress
     {
         try {
-            return socket_getpeername($this->socket, $address, $port) ? new InternetAddress($address, $port, 4) : null;
+            return @socket_getpeername($this->socket, $address, $port) ? new InternetAddress($address, $port, 4) : null;
         } catch (InvalidArgumentException $e) {
             return null;
         }
