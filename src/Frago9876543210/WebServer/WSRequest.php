@@ -49,8 +49,19 @@ class WSRequest implements StatusCodes
         return new static($method, $uri, $headers, $version);
     }
 
-    public function __construct(string $method = "GET", string $uri = "/", array $headers = [], string $version = "HTTP/1.1")
+    /**
+     * WSRequest constructor.
+     * @param null|string $method
+     * @param null|string $uri
+     * @param null|array $headers
+     * @param null|string $version
+     */
+    public function __construct(?string $method = "GET", ?string $uri = "/", ?array $headers = [], ?string $version = "HTTP/1.1")
     {
+        if ($method === null) $method = "GET";
+        if ($uri === null) $uri = "/";
+        if ($headers === null) $headers = [];
+        if ($version === null) $version = "HTTP/1.1";
         $this->headers = $headers;
         $this->method = strtoupper($method);
         $this->version = strtoupper($version);

@@ -19,7 +19,7 @@ class WSResponse implements StatusCodes
      */
     public static function error(int $status): self
     {
-        return new static("<h1>PHPServer: " . $status . " - " . self::CODES[$status] . "</h1>", $status);
+        return new static("<h1>$status - " . self::CODES[$status] . "</h1>", $status);
     }
 
     /** @var string The response version */
@@ -46,7 +46,11 @@ class WSResponse implements StatusCodes
         // set inital headers
         $this->header('Date', gmdate('D, d M Y H:i:s T'));
         $this->header('Content-Type', $contentType);
-        $this->header('Server', 'PHPServer');
+        $this->header('Server', 'libwebserver');
+        $this->header('Status', "$this->status " . self::CODES[$this->status]);
+        $this->header('Status-Code', "$this->status " . self::CODES[$this->status]);
+        $this->header('Status-Line', "$this->version $this->status " . self::CODES[$this->status]);
+        $this->header('Cache-Control', 'max-age=0');
     }
 
     /**
