@@ -69,7 +69,7 @@ class WSRequest implements StatusCodes
         $this->version = strtoupper($version);
         // split uri and parameters string
         $explode = explode('?', $uri);
-        $this->uri = $explode[0];
+        $this->uri = str_replace('/', DIRECTORY_SEPARATOR, $explode[0] ?? '');
         // parse the parmeters
         if (!empty($explode[1])) {
             parse_str($explode[1], $this->parameters);
