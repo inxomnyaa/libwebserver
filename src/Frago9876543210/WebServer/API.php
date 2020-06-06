@@ -15,13 +15,10 @@ class API
         try {
             $server = new WebServer(new InternetAddress("0.0.0.0", $port, 4), $handler);
             $server->start();
+            $plugin->getLogger()->notice("The WebServer was successfully started on " . $server->getBindAddress()->toString());
+            return $server;
         } catch (Exception $e) {
             $plugin->getLogger()->critical($e->getMessage());
-        } finally {
-            if (isset($server)) {
-                $plugin->getLogger()->notice("The WebServer was successfully started on " . $server->getBindAddress()->toString());
-                return $server;
-            }
         }
         return null;
     }
