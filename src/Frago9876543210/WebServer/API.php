@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Frago9876543210\WebServer;
 
+use ErrorException;
 use Exception;
 use pocketmine\plugin\Plugin;
+use pocketmine\utils\MainLogger;
 use raklib\utils\InternetAddress;
 
 class API
@@ -52,18 +54,33 @@ class API
             set_include_path($serverRoot);
             $serverRoot = realpath($serverRoot);
 
-            $requestedFile = '.' . $request->getUri();
-            if (is_dir($serverRoot . $request->getUri())) {
-                //is dir, search for index files
-                $parentDir = $requestedFile;
-                chdir($serverRoot . $parentDir);
-                $fileList = glob("index.{php,html,htm}", GLOB_MARK | GLOB_BRACE | GLOB_NOSORT);
-            } else {
-                //is file, search for file
-                $parentDir = dirname($requestedFile);
-                chdir($serverRoot . $parentDir);
-                $fileList = glob(basename($requestedFile), GLOB_MARK | GLOB_NOSORT);
+            $requestedFile = /*'.' .*/
+                $request->getUri();
+            set_error_handler(function ($errno, $errstr, $errfile, $errline, $errcontext) {
+                // error was suppressed with the @-operator
+                if (0 === error_reporting()) {
+                    return false;
+                }
+
+                throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+            });
+
+            try {
+                if (is_dir($serverRoot . $request->getUri())) {
+                    //is dir, search for index files
+                    $parentDir = $requestedFile;
+                    chdir($serverRoot . $parentDir);
+                    $fileList = glob("index.{php,html,htm}", GLOB_MARK | GLOB_BRACE | GLOB_NOSORT);
+                } else {
+                    //is file, search for file
+                    $parentDir = dirname($requestedFile);
+                    chdir($serverRoot . $parentDir);
+                    $fileList = glob(basename($requestedFile), GLOB_MARK | GLOB_NOSORT);
+                }
+            } catch (ErrorException $e) {
+                MainLogger::getLogger()->logException($e);
             }
+            restore_error_handler();
 
             if (empty($fileList)) {
                 $fullPath = false;
