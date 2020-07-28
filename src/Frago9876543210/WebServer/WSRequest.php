@@ -61,19 +61,13 @@ class WSRequest implements StatusCodes
     public function __construct(?string $method = "GET", ?string $uri = "/", ?array $headers = [], ?string $version = "HTTP/1.1")
     {
         if ($method === null) $method = "GET";
-        if ($uri === null) $uri = "/";
         if ($headers === null) $headers = [];
         if ($version === null) $version = "HTTP/1.1";
         $this->headers = $headers;
         $this->method = strtoupper($method);
         $this->version = strtoupper($version);
-        // split uri and parameters string
-        $explode = explode('?', $uri);
-        $this->uri = str_replace('/', DIRECTORY_SEPARATOR, $explode[0] ?? '');
-        // parse the parmeters
-        if (!empty($explode[1])) {
-            parse_str($explode[1], $this->parameters);
-        }
+        $this->uri = str_replace('/', DIRECTORY_SEPARATOR, parse_url($uri)['path'] ?? '');
+        parse_str(parse_url($uri)['query'] ?? '', $this->parameters);
     }
 
     /**

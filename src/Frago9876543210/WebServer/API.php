@@ -49,13 +49,19 @@ class API
      */
     public static function getPathHandler(string $serverRoot): callable
     {
+        $serverRoot = realpath('/' . $serverRoot);
         return static function (WSConnection $connection, WSRequest $request) use ($serverRoot): void {
             //set root path
             set_include_path($serverRoot);
-            $serverRoot = realpath($serverRoot);
+            $rtrim = rtrim(str_replace("\0", "", $serverRoot . $request->getUri()));
+            $requestedPath = realpath($rtrim);
+            if ($requestedPath === false) {
+                $response = WSResponse::error(404);
+                $connection->send($response);
+                $connection->close();
+                return;
+            }
 
-            $requestedFile = /*'.' .*/
-                $request->getUri();
             set_error_handler(function ($errno, $errstr, $errfile, $errline, $errcontext) {
                 // error was suppressed with the @-operator
                 if (0 === error_reporting()) {
@@ -66,37 +72,31 @@ class API
             });
 
             try {
-                if (is_dir($serverRoot . $request->getUri())) {
+                chdir(dirname($requestedPath));
+                if (is_dir($requestedPath)) {
                     //is dir, search for index files
-                    $parentDir = $requestedFile;
-                    chdir($serverRoot . $parentDir);
-                    $fileList = glob("index.{php,html,htm}", GLOB_MARK | GLOB_BRACE | GLOB_NOSORT);
+                    $fileList = glob($requestedPath . DIRECTORY_SEPARATOR . "index.{php,html,htm}", GLOB_MARK | GLOB_BRACE | GLOB_NOSORT);
                 } else {
                     //is file, search for file
-                    $parentDir = dirname($requestedFile);
-                    chdir($serverRoot . $parentDir);
-                    $fileList = glob(basename($requestedFile), GLOB_MARK | GLOB_NOSORT);
+                    $fileList = glob($requestedPath, GLOB_MARK | GLOB_NOSORT);
                 }
             } catch (ErrorException $e) {
                 MainLogger::getLogger()->logException($e);
             }
+
             restore_error_handler();
 
             if (empty($fileList)) {
-                $fullPath = false;
-            } else {
-                $str = getcwd() . DIRECTORY_SEPARATOR . array_shift($fileList);
-                $fullPath = realpath($str);
-            }
-            if ($fullPath === false) {
                 $response = WSResponse::error(404);
             } else {
-                if (!is_file($fullPath)) {
+                $file = array_shift($fileList);
+                //$fullPath = realpath(dirname($requestedPath) . DIRECTORY_SEPARATOR . $file);
+                if (!is_file($file)) {
                     $response = WSResponse::error(403);
                 } else {
                     try {
                         ob_start();
-                        @include $fullPath;
+                        @include $file;
                         $getContents = ob_get_clean();
                         ob_start(); // begin collecting output
                     } catch (\Throwable $e) {
