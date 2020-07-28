@@ -54,11 +54,11 @@ class WSRequest implements StatusCodes
     /**
      * WSRequest constructor.
      * @param null|string $method
-     * @param null|string $uri
+     * @param string $uri
      * @param null|array $headers
      * @param null|string $version
      */
-    public function __construct(?string $method = "GET", ?string $uri = "/", ?array $headers = [], ?string $version = "HTTP/1.1")
+    public function __construct(?string $method = "GET", string $uri = "/", ?array $headers = [], ?string $version = "HTTP/1.1")
     {
         if ($method === null) $method = "GET";
         if ($headers === null) $headers = [];
