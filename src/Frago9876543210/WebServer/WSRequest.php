@@ -35,7 +35,7 @@ class WSRequest implements StatusCodes
         // method, uri, version
         $requestInfo = explode(' ', array_shift($lines));
         $method = $requestInfo[0] ?? null;
-        $uri = $requestInfo[1] ?? null;
+        $uri = $requestInfo[1] ?? "/";
         $version = $requestInfo[2] ?? null;
         // headers
         $headers = [];

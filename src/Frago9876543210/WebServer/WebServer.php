@@ -8,7 +8,7 @@ use ClassLoader;
 use Exception;
 use pocketmine\plugin\PluginException;
 use pocketmine\Server;
-use pocketmine\Thread;
+use pocketmine\thread\Thread;
 use pocketmine\utils\Utils;
 use raklib\utils\InternetAddress;
 
@@ -49,10 +49,8 @@ class WebServer extends Thread
         $this->setClassLoader($cl);
     }
 
-    public function run(): void
+    public function onRun(): void
     {
-        $this->registerClassLoader();
-
         while ($this->isRunning) {
             if (is_resource(($client = socket_accept($this->socket)))) {
                 $connection = new WSConnection($client);
@@ -69,7 +67,7 @@ class WebServer extends Thread
         }
     }
 
-    /**
+	/**
      * @return InternetAddress
      */
     public function getBindAddress(): InternetAddress
