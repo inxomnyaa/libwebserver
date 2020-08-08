@@ -19,11 +19,11 @@ class WSResponse implements StatusCodes
      */
     public static function error(int $status): self
     {
-        return new static("<h1>$status - " . self::CODES[$status] . "</h1>", $status);
+        return new static("<h1>$status - " . self::CODES[$status] . '</h1>', $status);
     }
 
     /** @var string The response version */
-    protected $version = "HTTP/1.1";
+    protected $version = 'HTTP/1.1';
     /** @var int The current response status */
     protected $status = 200;
     /** @var string The current response body */
@@ -37,13 +37,13 @@ class WSResponse implements StatusCodes
      * @param int $status
      * @param string $contentType
      */
-    public function __construct(string $body, int $status = null, string $contentType = "")
+    public function __construct(string $body, int $status = null, string $contentType = '')
     {
         if ($status !== null) {
             $this->status = $status;
         }
         $this->body = $body;
-        // set inital headers
+        // set initial headers
         $this->header('Date', gmdate('D, d M Y H:i:s T'));
         $this->header('Content-Type', $contentType);
         $this->header('Server', 'libwebserver');

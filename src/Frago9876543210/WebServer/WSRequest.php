@@ -30,12 +30,12 @@ class WSRequest implements StatusCodes
      */
     public static function fromHeaderString(string $header): self
     {
-        if ($header === '') throw new SocketException("No more bytes left or connection closed");
+        if ($header === '') throw new SocketException('No more bytes left or connection closed');
         $lines = explode("\n", $header);
         // method, uri, version
         $requestInfo = explode(' ', array_shift($lines));
         $method = $requestInfo[0] ?? null;
-        $uri = $requestInfo[1] ?? "/";
+        $uri = $requestInfo[1] ?? '/';
         $version = $requestInfo[2] ?? null;
         // headers
         $headers = [];
@@ -58,11 +58,11 @@ class WSRequest implements StatusCodes
      * @param null|array $headers
      * @param null|string $version
      */
-    public function __construct(?string $method = "GET", string $uri = "/", ?array $headers = [], ?string $version = "HTTP/1.1")
+    public function __construct(?string $method = 'GET', string $uri = '/', ?array $headers = [], ?string $version = 'HTTP/1.1')
     {
-        if ($method === null) $method = "GET";
+        if ($method === null) $method = 'GET';
         if ($headers === null) $headers = [];
-        if ($version === null) $version = "HTTP/1.1";
+        if ($version === null) $version = 'HTTP/1.1';
         $this->headers = $headers;
         $this->method = strtoupper($method);
         $this->version = strtoupper($version);
@@ -88,6 +88,14 @@ class WSRequest implements StatusCodes
         return $this->uri;
     }
 
+	/**
+	 * @return array
+	 */
+	public function getHeaders(): array
+	{
+		return $this->headers;
+	}
+
     /**
      * Return a request header
      * @param string $key
@@ -98,6 +106,14 @@ class WSRequest implements StatusCodes
     {
         return $this->headers[$key] ?? $default;
     }
+
+	/**
+	 * @return array
+	 */
+	public function getParameters(): array
+	{
+		return $this->parameters;
+	}
 
     /**
      * Return a request parameter
