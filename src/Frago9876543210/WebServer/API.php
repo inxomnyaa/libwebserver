@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Frago9876543210\WebServer;
 
+use BaseClassLoader;
 use Closure;
 use ErrorException;
 use Exception;
@@ -11,7 +12,6 @@ use pocketmine\plugin\Plugin;
 use poggit\virion\devirion\DEVirion;
 use raklib\utils\InternetAddress;
 use Throwable;
-use XenialDan\TestPlugin\CustomClassLoader;
 
 class API
 {
@@ -20,13 +20,16 @@ class API
 		try {
 			$server = new WebServer(new InternetAddress('0.0.0.0', $port, 4), $handler);
 
-			if (($dv = $plugin->getServer()->getPluginManager()->getPlugin('DEVirion')) !== null) {
-				/** @var DEVirion $dv */
-				$dv->getVirionClassLoader();
+			if (!$server->getClassLoader() instanceof CustomClassLoader) {
+				$sl = $plugin->getServer()->getLoader();
+				if (!$sl instanceof BaseClassLoader) $sl = new BaseClassLoader();
+				$dv = $plugin->getServer()->getPluginManager()->getPlugin('DEVirion');
+				/** @var $dv DEVirion */
+				if ($dv !== null)
+					$dvl = $dv->getVirionClassLoader();
+				$cl = new CustomClassLoader($sl, $dvl ?? null);
+				$server->setClassLoader($cl);
 			}
-
-			$cl = new CustomClassLoader();
-			$server->setClassLoader($cl);
 
 			$server->start(PTHREADS_INHERIT_NONE);
 
