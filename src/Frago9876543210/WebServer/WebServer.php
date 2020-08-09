@@ -48,7 +48,7 @@ class WebServer extends Thread
 			if (is_resource(($client = socket_accept($this->socket)))) {
 				$connection = new WSConnection($client);
 				try {
-					call_user_func($this->handler, $connection, WSRequest::fromHeaderString($connection->read()));
+					call_user_func($this->handler, $connection, WSRequest::constructFromRawData($connection->read()));
 				} catch (SocketException $e) {
 					print $e->getMessage();
 					print $e->getTraceAsString();

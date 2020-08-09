@@ -12,7 +12,6 @@ class CustomClassLoader extends VirionClassLoader
 
 	public function __construct(BaseClassLoader $loader1,?VirionClassLoader $vl = null)
 	{
-		var_dump($this);
 		parent::__construct();
 		if($vl!== null){
 			$closure = function () { return $this->mappedClasses; };
@@ -28,7 +27,6 @@ class CustomClassLoader extends VirionClassLoader
 		foreach ($lookup as $item) {
 			$this->addPath($item);
 		}
-		var_dump($this);
 	}
 
 	public function findClass($name): ?string
