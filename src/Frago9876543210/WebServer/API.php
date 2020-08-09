@@ -4,18 +4,29 @@ declare(strict_types=1);
 
 namespace Frago9876543210\WebServer;
 
+use Closure;
 use ErrorException;
 use Exception;
 use pocketmine\plugin\Plugin;
+use poggit\virion\devirion\DEVirion;
 use raklib\utils\InternetAddress;
 use Throwable;
+use XenialDan\TestPlugin\CustomClassLoader;
 
 class API
 {
-	public static function startWebServer(Plugin $plugin, callable $handler, int $port = 8080): ?WebServer
+	public static function startWebServer(Plugin $plugin, Closure $handler, int $port = 8080): ?WebServer
 	{
 		try {
 			$server = new WebServer(new InternetAddress('0.0.0.0', $port, 4), $handler);
+
+			if (($dv = $plugin->getServer()->getPluginManager()->getPlugin('DEVirion')) !== null) {
+				/** @var DEVirion $dv */
+				$dv->getVirionClassLoader();
+			}
+
+			$cl = new CustomClassLoader();
+			$server->setClassLoader($cl);
 
 			$server->start(PTHREADS_INHERIT_NONE);
 
@@ -33,9 +44,9 @@ class API
 	 * If you create your own handler, you could also access request
 	 * data and modify the response data accordingly.
 	 * @param string $content
-	 * @return callable
+	 * @return Closure
 	 */
-	public static function getTextResponseHandler(string $content = '<h1>PHP WebServer</h1>'): callable
+	public static function getTextResponseHandler(string $content = '<h1>PHP WebServer</h1>'): Closure
 	{
 		return static function (WSConnection $connection, WSRequest $request) use ($content): void {
 			$connection->send(new WSResponse($content));
@@ -47,9 +58,9 @@ class API
 	 * Use this when you want a fully responsible webserver which can automatically
 	 * access subfolders & files, display images and execute .php websites
 	 * @param string $serverRoot
-	 * @return callable
+	 * @return Closure
 	 */
-	public static function getPathHandler(string $serverRoot): callable
+	public static function getPathHandler(string $serverRoot): Closure
 	{
 		$serverRoot = realpath('/' . $serverRoot);
 		return static function (WSConnection $connection, WSRequest $request) use ($serverRoot): void {

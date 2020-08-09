@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Frago9876543210\WebServer;
 
+use Closure;
 use Exception;
 use pocketmine\plugin\PluginException;
 use pocketmine\thread\Thread;
@@ -14,7 +15,7 @@ class WebServer extends Thread
 {
 	/** @var resource $socket */
 	protected $socket;
-	/** @var callable $handler */
+	/** @var Closure $handler */
 	protected $handler;
 	/** @var InternetAddress $bindAddress */
 	protected $bindAddress;
@@ -24,10 +25,10 @@ class WebServer extends Thread
 	/**
 	 * WebServer constructor.
 	 * @param InternetAddress $bindAddress
-	 * @param callable $handler
+	 * @param Closure $handler
 	 * @throws Exception
 	 */
-	public function __construct(InternetAddress $bindAddress, callable $handler)
+	public function __construct(InternetAddress $bindAddress, Closure $handler)
 	{
 		$this->bindAddress = $bindAddress;
 		$this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
@@ -84,9 +85,9 @@ class WebServer extends Thread
 	}
 
 	/**
-	 * @return callable
+	 * @return Closure
 	 */
-	public function getHandler(): callable
+	public function getHandler(): Closure
 	{
 		return $this->handler;
 	}
